@@ -4,7 +4,7 @@
 
 - Họ tên: Lê Quốc Khánh
 - MSSV: 2A202603742
-- Email: <!-- TODO: điền email của bạn -->
+- Email: 26ai.khanhlq2@vinuni.edu.vn
 
 ## 2. Phần việc phụ trách
 
