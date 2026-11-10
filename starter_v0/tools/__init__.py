@@ -17,7 +17,10 @@ from .policy.tool import search_company_policy
 from .social_search.tool import search_tweets
 from .send.tool import send_telegram
 from .lookup.tool import web_search
-
+from .feedback_analyzer.tool import feedback_analyzer
+from .summarize_text.tool import summarize_text
+from .keyword_extractor.tool import keyword_extractor
+from .hashtag_suggester.tool import hashtag_suggester
 
 # NOTE (starter_v0): tool names here are intentionally vague. These keys are the
 # names the model sees AND the names data/eval_base.json + data/eval_research_extension.json
@@ -35,6 +38,10 @@ TOOL_FUNCTIONS = {
     "policy": search_company_policy,
     "papers": arxiv_search,
     "paper_text": get_arxiv_paper_text,
+    "feedback_analyzer": feedback_analyzer,
+    "summarize_text": summarize_text,
+    "keyword_extractor": keyword_extractor,
+    "hashtag_suggester": hashtag_suggester,
     # TODO CP3 (student): register your new tool here, e.g. "my_tool": my_tool_function,
     # then declare it in artifacts/tools.yaml and run `pytest tests/test_tool_contract.py`.
 }

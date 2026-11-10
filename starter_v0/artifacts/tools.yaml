@@ -123,3 +123,13 @@ tools:
         max_pages: {type: integer, default: 5, description: "Số trang"}
         max_chars: {type: integer, default: 8000, description: "Số ký tự"}
       required: [arxiv_url]
+  # ---------------- Team tools (CP3) ----------------
+  - name: feedback_analyzer
+    description: "Phân tích cảm xúc một đoạn phản hồi tiếng Việt: positive/negative/neutral, kèm các điểm khen và điểm chê tìm được (hiểu cả gõ có dấu và không dấu). Dùng khi user đưa sẵn một đoạn text phản hồi/đánh giá và muốn biết khách hài lòng hay không. KHÔNG dùng để tìm bài đăng trên mạng xã hội (dùng social_search), đọc URL (dùng fetch) hay tra cứu thông tin (dùng lookup); tool chỉ nhận text nằm ngay trong args."
+    parameters:
+      type: object
+      properties:
+        feedback:
+          type: string
+          description: "Đoạn phản hồi tiếng Việt cần phân tích, text đầy đủ"
+      required: [feedback]
