@@ -62,10 +62,13 @@ Lấy từ `starter_v0/artifacts/version_log.csv` và `starter_v0/runs/*.json`. 
 
 | Version | Changed Artifact | Hypothesis | Metric Before | Metric After | Run File |
 |---|---|---|---:|---:|---|
-| v0 | baseline |  |  |  |  |
-| v1 |  |  |  |  |  |
-| v2 |  |  |  |  |  |
-| v3 |  |  |  |  |  |
+| v0 | baseline | — (đo mốc, prompt xấu của starter dạy model đoán bừa / gửi không xác nhận / làm 1 bước) | case=0.65, routing=0.75, args=0.65 | case=0.65, routing=0.75, args=0.65 | `runs/v0_B_base_openai_20261110T173638837655.json` |
+| v1 | `system_prompt.md` (prompt `eb1c8179` → `5edbb66d`) | Bỏ 3 chỉ dẫn xấu của starter, thêm rule: thiếu thông tin → `clarify`, out-of-scope → không gọi tool, convention args cho `lookup`/`timeline` | case=0.65, routing=0.75, args=0.65 | case=0.85, routing=0.95, args=0.85 | `runs/v1_B_base_openai_20261110T174447516616.json` |
+| v2 | `tools.yaml` (tools `e69bc53e` → `9dbbe385`) | Description `clarify`/`send` quá mơ hồ → viết lại: LUÔN truyền `response_type`; `send` chỉ gọi khi `confirmed=true` | case=0.85, routing=0.95, args=0.85 | case=0.95, routing=1.00, args=0.95 | `runs/v2_B_base_openai_20261110T175431755694.json` |
+| v3 | `system_prompt.md` (prompt `5edbb66d` → `f39cb17e`) | Thêm rule tường minh "hành động gửi phải dùng `response_type='yes_no'`" — **không cải thiện**, loại trừ giả thuyết "thiếu rule" | case=0.95, routing=1.00, args=0.95 | case=0.95, routing=1.00, args=0.95 | `runs/v3_B_base_openai_20261110T180056024580.json` |
+| v4 | `system_prompt.md` (prompt `f39cb17e` → `0b5505a6`) | Rule bằng lời chưa đủ cho `gpt-4o-mini` → thêm few-shot example cụ thể cho luồng clarify(yes_no) → send(confirmed) | case=0.95, routing=1.00, args=0.95 | case=1.00, routing=1.00, args=1.00 | `runs/v4_B_base_openai_20261110T180445506640.json` |
+
+Cả 5 run đều hợp lệ: `provider_error_cases == 0`, `measured_cases == total_cases == 20`. Provider: OpenAI (`gpt-4o-mini`). Chi tiết phân tích từng version: xem `V0-V4-EXPLAINED.md` ở gốc repo.
 
 ### B2. Failure Analysis
 
@@ -73,7 +76,15 @@ Lấy từ `results[*].result.failures` trong run JSON.
 
 | Case ID | Failure Type | Actual Tool Calls | What Failed | Fix |
 |---|---|---|---|---|
-|  |  |  |  |  |
+| R03_web_news_routing | wrong_arg_value | `lookup(query="AI news", topic="news", timeframe="day")` | `query` phải là `"AI"` (từ "news" đã nằm trong `topic=news`) | v1: thêm convention "query ngắn gọn" vào prompt |
+| R08_out_of_scope | out_of_scope | `send(text="Nguyên hàm của x^2 là...")` | Câu giải tích phân ngoài phạm vi → phải trả lời text, không gọi tool. Model còn dùng `send` làm công cụ trả lời | v1: thêm rule out-of-scope "reply in text, call NO tool" |
+| R10_missing_handle | missing_info | `timeline(screenname="sama")` | Không nói của ai → phải `clarify`, không được đoán theo gợi ý xấu "pick Sam Altman" | v1: rule "NEVER guess"; v2: description `clarify` bắt buộc `response_type` |
+| R11_missing_url | missing_info | `fetch(url="https://example.com/article")` | "bài này" không có link → bịa URL thay vì hỏi | v1: rule "NEVER guess"; v2: như trên |
+| R12_confirm_before_send | wrong_boundary | v0: `send(text="Bản tin này")`; v2/v3: `clarify(response_type="text")`; v4: `clarify(response_type="yes_no")` ✅ | Yêu cầu đăng lên Telegram phải được xác nhận yes/no trước khi `send`. Cần 3 lớp sửa: rule prompt (v1) + boundary trong description (v2) + few-shot example (v4) | v2 sửa `tools.yaml`, v4 thêm example |
+| R13_parallel_web_and_tweets | wrong_arg_value | `lookup(query="AI news")` (thiếu `topic=news`) + `social_search` | 2 nguồn nhưng args sai convention; làm 1 bước vội theo prompt xấu | v1: convention + bỏ "single step" |
+| R14_out_of_scope_coding | out_of_scope | `send(text="def fibonacci...")` | Viết code Fibonacci ngoài phạm vi → không gọi tool | v1: rule out-of-scope |
+
+Pattern chính: 7/7 FAIL của v0 đều bắt nguồn từ chỉ dẫn xấu có chủ đích trong prompt starter (đoán thay vì hỏi / gửi không cần xác nhận / luôn làm 1 bước) chứ không phải model "ngu". 6/7 hết sau v1–v2; R12 cần thêm v4 (few-shot). Case FAIL duy nhất còn lại ở v2–v3 (`R12`) được phân tích trung thực trong B1: v3 không tăng điểm nhưng loại trừ được giả thuyết "thiếu rule".
 
 ### B3. Team Eval Cases
 
