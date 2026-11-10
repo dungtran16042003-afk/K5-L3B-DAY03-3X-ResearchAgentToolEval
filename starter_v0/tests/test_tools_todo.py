@@ -104,19 +104,117 @@ def test_policy_instruction_like_lines_go_to_untrusted_text() -> None:
     pytest.skip(TODO)
 
 
-# ---------------- YOUR NEW TOOL(S) ----------------
-# Write at least 3 tests per tool your team adds:
-#   1. happy path (mocked if it calls an API)
-#   2. bad / missing input from the model (empty string, wrong type, out-of-enum value)
-#   3. failure path (missing key, HTTP error, timeout) -> returns error dict, does not raise
+# ---------- Tool mới của nhóm làm ở CP3 ----------
+# 4 tool: feedback_analyzer, summarize_text, keyword_extractor, hashtag_suggester
+# Với mỗi tool nhóm test 3 thứ:
+# - happy path: input bình thường thì trả kết quả đúng
+# - model gửi input rác (chuỗi rỗng, sai kiểu, số âm...) -> phải trả {"error": ...}
+# - tool không được raise ra ngoài, để agent đọc được lỗi rồi hỏi lại user
 
-def test_my_new_tool_happy_path() -> None:
-    pytest.skip(TODO)
+# ---------------- feedback_analyzer ----------------
+
+def test_feedback_binh_luan_khen_thi_positive() -> None:
+    # Bình luận toàn lời khen -> sentiment = positive, không có điểm chê nào
+    result = TOOL_FUNCTIONS["feedback_analyzer"](feedback="Giao hàng nhanh, đóng gói cẩn thận, chất lượng tốt")
+    assert result["sentiment"] == "positive"
+    assert "tốt" in result["positive_points"]
+    assert "nhanh" in result["positive_points"]
+    assert result["negative_points"] == []
 
 
-def test_my_new_tool_bad_input_from_model() -> None:
-    pytest.skip(TODO)
+def test_feedback_chue_nhieu_hon_khen_thi_negative() -> None:
+    # Lời chê nhiều hơn lời khen -> sentiment = negative
+    result = TOOL_FUNCTIONS["feedback_analyzer"](feedback="Ship chậm, app hay bị lỗi, hơi thất vọng")
+    assert result["sentiment"] == "negative"
+    assert "chậm" in result["negative_points"]
+    assert "lỗi" in result["negative_points"]
+    assert result["positive_points"] == []
 
 
-def test_my_new_tool_failure_returns_error_dict() -> None:
-    pytest.skip(TODO)
+def test_feedback_de_trong_thi_tra_error() -> None:
+    # Có lúc user chỉ gõ dấu cách rồi gửi -> model sẽ truyền chuỗi rỗng vào tool
+    # lúc này tool phải trả error dict chứ không raise làm crash agent
+    result = TOOL_FUNCTIONS["feedback_analyzer"](feedback="   ")
+    assert "error" in result
+    assert "sentiment" not in result
+
+
+def test_feedback_gui_so_thi_tra_error() -> None:
+    # Model thi thoảng truyền sai kiểu (số thay vì chuỗi) -> cũng phải trả error dict
+    result = TOOL_FUNCTIONS["feedback_analyzer"](feedback=12345)
+    assert "error" in result
+    assert "sentiment" not in result
+
+
+# ---------------- summarize_text ----------------
+
+def test_tom_tat_giu_lai_cau_chua_tu_khoa_chinh() -> None:
+    # Câu lặp từ "tệ" nhiều lần là câu quan trọng nhất nên phải được giữ lại,
+    # còn những câu lạc đề (đi chợ, chó con) phải bị loại
+    text = (
+        "Sản phẩm này dùng rất tệ. "
+        "Hôm qua mình đi chợ mua rau. "
+        "Tệ lắm, tệ thật, không đáng tiền. "
+        "Chó con trông dễ thương quá."
+    )
+    result = TOOL_FUNCTIONS["summarize_text"](text=text, max_sentences=1)
+    assert result["sentence_count"] == 4
+    assert result["selected_count"] == 1
+    assert "tệ" in result["summary"].lower()
+    assert "chợ" not in result["summary"].lower()
+
+
+def test_tom_tat_chuoi_rong_tra_error() -> None:
+    result = TOOL_FUNCTIONS["summarize_text"](text="")
+    assert "error" in result
+
+
+def test_tom_tat_so_cau_sai_kieu_tra_error() -> None:
+    # Model gửi max_sentences dạng chuỗi "3" thay vì số -> error, không crash
+    result = TOOL_FUNCTIONS["summarize_text"](text="Một câu duy nhất.", max_sentences="3")
+    assert "error" in result
+    assert "max_sentences" in result["error"]
+
+
+# ---------------- keyword_extractor ----------------
+
+def test_keyword_tu_xuat_hien_nhieu_nhat_dung_dau() -> None:
+    # "AI" lặp 3 lần nên phải đứng đầu danh sách, và chỉ trả đúng 2 từ vì top_k=2
+    result = TOOL_FUNCTIONS["keyword_extractor"](
+        text="AI đang thay đổi nhiều ngành. Các công ty AI tăng đầu tư. Học AI từ cơ bản.", top_k=2
+    )
+    assert result["keywords"][0] == "ai"
+    assert result["counts"]["ai"] == 3
+    assert len(result["keywords"]) == 2
+
+
+def test_keyword_top_k_bang_0_tra_error() -> None:
+    # top_k=0 là kiểu input rác model hay gửi -> error dict
+    result = TOOL_FUNCTIONS["keyword_extractor"](text="AI đang phát triển", top_k=0)
+    assert "error" in result
+    assert "keywords" not in result
+
+
+def test_keyword_text_none_tra_error() -> None:
+    result = TOOL_FUNCTIONS["keyword_extractor"](text=None)
+    assert "error" in result
+
+
+# ---------------- hashtag_suggester ----------------
+
+def test_hashtag_bo_dau_va_viet_hoa() -> None:
+    # "dữ liệu lớn" phải được bỏ dấu rồi viết hoa thành hashtag: #Du #Lieu #Lon
+    result = TOOL_FUNCTIONS["hashtag_suggester"](text="Trí tuệ nhân tạo và dữ liệu lớn", max_tags=3)
+    assert result["hashtags"] == ["#Du", "#Lieu", "#Lon"]
+
+
+def test_hashtag_text_rong_tra_error() -> None:
+    result = TOOL_FUNCTIONS["hashtag_suggester"](text="   ")
+    assert "error" in result
+    assert "hashtags" not in result
+
+
+def test_hashtag_max_tags_am_tra_error() -> None:
+    # max_tags âm là input rác từ model -> error dict
+    result = TOOL_FUNCTIONS["hashtag_suggester"](text="AI và dữ liệu", max_tags=-1)
+    assert "error" in result

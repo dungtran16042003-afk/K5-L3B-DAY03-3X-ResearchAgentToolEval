@@ -106,11 +106,14 @@ Lấy từ `starter_v0/transcripts/*.transcript.json`.
 
 | Item | Evidence File | What Worked | Risk / Guardrail |
 |---|---|---|---|
-| Tool mới (`tools/<tên>/`) |  |  |  |
-| Unit test tool mới (≥ 3 test/tool) | `pytest` output (0 failed) |  |  |
+| Tool mới `feedback_analyzer` | `starter_v0/tools/feedback_analyzer/` (tool.py + TOOL.md), khai báo trong `tools/__init__.py` + `artifacts/tools.yaml` | Phân tích cảm xúc phản hồi tiếng Việt (positive/negative/neutral + điểm khen/chê), hiểu cả gõ có dấu/không dấu | Input xấu (chuỗi rỗng, sai kiểu) trả error dict thay vì raise để agent hỏi lại user |
+| Tool mới `summarize_text` | `starter_v0/tools/summarize_text/` | Tóm tắt extractive tiếng Việt: chọn câu điểm cao nhất theo tần suất từ, giữ nguyên văn | `max_sentences` sai kiểu/giá trị trả error dict |
+| Tool mới `keyword_extractor` | `starter_v0/tools/keyword_extractor/` | Trích top_k từ khóa kèm counts, bỏ stopword/số (Việt + Anh) | `top_k < 1` hoặc text sai kiểu trả error dict |
+| Tool mới `hashtag_suggester` | `starter_v0/tools/hashtag_suggester/` | Đề xuất hashtag không dấu CamelCase ("đ" map tay vì NFD không tách được) | `max_tags` sai giá trị, text rỗng trả error dict |
+| Unit test tool mới (≥ 3 test/tool) | `pytest` output (0 failed) | 13 test trong `starter_v0/tests/test_tools_todo.py` (4 + 3 + 3 + 3): happy path, input xấu từ model, nhánh lỗi; full suite **95 passed, 0 failed** | Test chỉ chạy offline, không tốn credit API |
 | UI (lệnh chạy + link dùng thử) |  |  |  |
 
-Tool unit tests: số test đã viết, và một ví dụ lỗi mà unit test bắt được nhưng eval không bắt được.
+Tool unit tests: 13 test đã viết. Ví dụ lỗi unit test bắt được mà eval không bắt được: nếu model gửi `feedback=123` (sai kiểu) thì bản code đầu tiên `raise ValueError` làm agent crash giữa lượt; eval chỉ chấm model *chọn* tool và *truyền* args có đúng không nên không phát hiện được — test `test_feedback_gui_so_thi_tra_error` bắt đúng nhánh này và buộc tool trả `{"error": ...}` để agent hỏi lại user.
 
 ### B5. Bonus Evidence
 
@@ -119,7 +122,7 @@ Chỉ điền nếu nhóm làm bonus (ghi riêng, tối đa 10 điểm). Tool c�
 | Bonus | Evidence File | What Worked | Risk / Guardrail |
 |---|---|---|---|
 | Small Local Model | xem B7 |  |  |
-| Hơn 3 tool mới (≥ 4) |  |  |  |
+| Hơn 3 tool mới (≥ 4) | `starter_v0/tools/{feedback_analyzer,summarize_text,keyword_extractor,hashtag_suggester}/` + 13 test trong `tests/test_tools_todo.py` | 4 tool local tự viết, mỗi tool đủ TOOL.md + đăng ký (`tools/__init__.py`, `artifacts/tools.yaml`) + ≥ 3 test; `pytest` 95 passed, 0 failed | Cần ≥ 1 eval case route tới tool mới trong `data/eval_group.json` (làm ở CP4) |
 | `send` gửi thật lên Telegram sau xác nhận | transcript |  |  |
 | Test challenge (0 skipped / regression test) | `pytest` output |  |  |
 

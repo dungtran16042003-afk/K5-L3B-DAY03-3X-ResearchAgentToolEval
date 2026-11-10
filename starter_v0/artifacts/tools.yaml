@@ -133,3 +133,30 @@ tools:
           type: string
           description: "Đoạn phản hồi tiếng Việt cần phân tích, text đầy đủ"
       required: [feedback]
+
+  - name: summarize_text
+    description: "Tóm tắt rút trích (extractive) một đoạn văn tiếng Việt: chọn tối đa max_sentences câu quan trọng nhất theo tần suất từ, giữ thứ tự và nguyên văn câu gốc (không bịa lời mới). Dùng khi có văn bản dài (kết quả fetch, bài báo, phản hồi) cần rút gọn trước khi trình bày. KHÔNG dùng để tìm thông tin mới (dùng lookup/social_search) hay trích từ khóa chủ đề (dùng keyword_extractor)."
+    parameters:
+      type: object
+      properties:
+        text: {type: string, default: "", description: "Đoạn văn cần tóm tắt"}
+        max_sentences: {type: integer, default: 3, description: "Số câu nhiều nhất được giữ lại (nguyên >= 1)"}
+      required: [text]
+
+  - name: keyword_extractor
+    description: "Trích xuất top_k từ khóa hay gặp nhất trong một đoạn văn tiếng Việt/Anh (đã bỏ stopword và số), kèm số lần xuất hiện. Dùng khi cần biết chủ đề chính của text đã có sẵn (bài fetch về, phản hồi, transcript). KHÔNG dùng để tìm bài đăng (dùng social_search), đọc URL (dùng fetch) hay tóm tắt thành đoạn văn (dùng summarize_text)."
+    parameters:
+      type: object
+      properties:
+        text: {type: string, default: "", description: "Đoạn văn cần trích từ khóa"}
+        top_k: {type: integer, default: 5, description: "Số từ khóa trả về (nguyên >= 1)"}
+      required: [text]
+
+  - name: hashtag_suggester
+    description: "Đề xuất tối đa max_tags hashtag không dấu, viết hoa chữ cái đầu (ví dụ 'dữ liệu' thành #Du #Lieu), dựa trên các từ khóa chính của đoạn text. Dùng khi chuẩn bị đăng digest/bài đăng lên mạng xã hội, thường gọi trước send. KHÔNG dùng để phân tích cảm xúc khách hàng (dùng feedback_analyzer) hay tạo nội dung mới (dùng lookup/summarize_text)."
+    parameters:
+      type: object
+      properties:
+        text: {type: string, default: "", description: "Đoạn văn làm nguồn đề xuất hashtag"}
+        max_tags: {type: integer, default: 3, description: "Số hashtag nhiều nhất (nguyên >= 1)"}
+      required: [text]

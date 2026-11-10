@@ -38,6 +38,7 @@ TOOL_FUNCTIONS = {
     "policy": search_company_policy,
     "papers": arxiv_search,
     "paper_text": get_arxiv_paper_text,
+    
     "feedback_analyzer": feedback_analyzer,
     "summarize_text": summarize_text,
     "keyword_extractor": keyword_extractor,
