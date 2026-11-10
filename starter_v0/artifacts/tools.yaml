@@ -16,7 +16,7 @@
 tools:
   # ---------------- Core tools ----------------
   - name: clarify
-    description: "Gửi một câu hỏi cho người dùng."
+    description: "Hỏi người dùng khi thiếu thông tin (thiếu handle, URL, chủ đề). LUÔN truyền response_type - 'text' cho câu hỏi mở, 'yes_no' khi xin xác nhận trước một hành động."
     parameters:
       type: object
       properties:
@@ -86,7 +86,7 @@ tools:
 
   # ---------------- Bonus tools ----------------
   - name: send
-    description: "Gửi một đoạn văn bản đi."
+    description: "Gửi text lên Telegram. CHỈ gọi khi người dùng ĐÃ xác nhận rõ ràng (confirmed=true). Chưa xác nhận thì KHÔNG gọi send - hãy gọi clarify(response_type='yes_no') để xin xác nhận trước."
     parameters:
       type: object
       properties:
