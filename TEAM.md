@@ -13,7 +13,7 @@
 | --: | ------------------ | ----------- | --------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------- |
 |   1 | Nguyễn Tấn Dũng | 2A202603734 | 26ai.dungnt15@vinuni.edu.vn | dungtran16042003-afk | Leader / CP4, CP5 (Eval nhóm 10 case, Streamlit UI, Live chat, Group report Phần A & B3-B5) + Bonus Test challenge |
 |   2 | Lê Huy Anh        | 2A202603786 | 26ai.anhlh5@vinuni.edu.vn   | hann1holic           | CP1, CP2 (Setup môi trường, Tối ưu Prompt & Tool v0–v4, Version log, Failure analysis B1-B2)                   |
-|   3 | Lê Quốc Khánh   | 2A202603742 | 26ai.khanhlq2@vinuni.edu.vn | lqkhanhno            | CP3 (Phát triển 4 Tools mới local, Tool Contract, 13 Unit test, B5a) + Bonus ≥ 4 Tool mới                       |
+|   3 | Lê Quốc Khánh   | 2A202603742 | 26ai.khanhlq2@vinuni.edu.vn | lqkhanhno            | CP3 (Phát triển 4 Tools mới local, Tool Contract, 13 Unit test, B5a) + 4 Tool                                    |
 
 ## Cá nhân
 
