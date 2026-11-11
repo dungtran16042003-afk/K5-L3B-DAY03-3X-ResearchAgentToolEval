@@ -3,5 +3,101 @@
   "dataset_role": "group",
   "description": "Case do NHÓM tự viết thêm để cover thêm trường hợp. Mỗi case cần: id, phase='B', query HOẶC turns, failure_type (thuộc allowed_failure_types), và expect (tool_calls[...] hoặc no_tool=true). Nên kèm metadata.what_it_tests.",
   "allowed_failure_types": ["wrong_tool", "wrong_arg_value", "wrong_boundary", "unnecessary_tool", "out_of_scope", "missing_info"],
-  "cases": []
+  "cases": [
+    {
+      "id": "G01_send_after_explicit_confirmation",
+      "phase": "B", "suite": "group",
+      "query": "Mình đã duyệt nội dung rồi: gửi tin nhắn 'Nhóm họp 9h sáng mai tại phòng A3' lên Telegram giúp mình nhé. Mình xác nhận gửi đúng nội dung này.",
+      "failure_type": "wrong_boundary",
+      "expect": {"tool_calls": [{"name": "send", "args": {"confirmed": true}}]},
+      "metadata": {"skill": "send_after_confirmation", "difficulty": "medium", "what_it_tests": "User xác nhận ngay trong lượt hỏi (nội dung tường minh + 'mình xác nhận') → gọi send(confirmed=true) ngay, không hỏi lại. Base chỉ đo chiều ngược (phải hỏi trước khi gửi)."}
+    },
+    {
+      "id": "G02_lookup_timeframe_month",
+      "phase": "B", "suite": "group",
+      "query": "Tổng hợp tin AI trong tháng này giúp mình.",
+      "failure_type": "wrong_arg_value",
+      "expect": {"tool_calls": [{"name": "lookup", "args": {"query": "AI", "topic": "news", "timeframe": "month"}}]},
+      "metadata": {"skill": "arg_timeframe_month", "difficulty": "medium", "what_it_tests": "'tháng này' → timeframe=month (base mới đo day/week), kèm topic=news cho tin thời sự."}
+    },
+    {
+      "id": "G03_lookup_max_results",
+      "phase": "B", "suite": "group",
+      "query": "Tìm trên web 7 kết quả về climate change giúp mình.",
+      "failure_type": "wrong_arg_value",
+      "expect": {"tool_calls": [{"name": "lookup", "args": {"query": "climate change", "max_results": 7}}]},
+      "metadata": {"skill": "arg_max_results", "difficulty": "medium", "what_it_tests": "Trích số lượng cho lookup (max_results=7). Base chỉ đo limit của timeline (R05), chưa đo max_results của lookup."}
+    },
+    {
+      "id": "G04_translation_out_of_scope",
+      "phase": "B", "suite": "group",
+      "query": "Dịch giúp mình câu 'The model called the wrong tool' sang tiếng Nhật nhé.",
+      "failure_type": "out_of_scope",
+      "expect": {"no_tool": true, "behavior": "refuse"},
+      "metadata": {"skill": "out_of_scope_translation", "difficulty": "easy", "what_it_tests": "Yêu cầu dịch thuật không thuộc research/news → KHÔNG gọi tool nào (base chỉ đo out-of-scope dạng toán và coding)."}
+    },
+    {
+      "id": "G05_format_thread_routing",
+      "phase": "B", "suite": "group",
+      "query": "Đóng gói 3 bài này thành thread (chuỗi bài đánh số 1/, 2/, 3/): 'GPT-5 ra mắt' tại https://openai.com/gpt-5, 'Claude 4 ra mắt' tại https://anthropic.com/news, 'Gemini vượt benchmark' tại https://blog.google.",
+      "failure_type": "wrong_tool",
+      "expect": {"tool_calls": [{"name": "format", "args": {"template": "thread"}}]},
+      "metadata": {"skill": "routing_format_local", "difficulty": "medium", "what_it_tests": "Dữ liệu đã có sẵn trong lượt hỏi, chỉ cần trình bày lại → gọi format (tool local, không gọi lookup/fetch). Base chưa có case nào route tới format."}
+    },
+    {
+      "id": "GM01_confirm_then_send",
+      "phase": "B", "suite": "group",
+      "turns": [
+        {"role": "user", "content": "Gửi thông báo 'Bản tin AI số 42 đã xuất bản' lên Telegram giúp mình"},
+        {"role": "user", "content": "Ừa đúng rồi, mình xác nhận gửi thông báo đó, bạn gửi đi nhé"}
+      ],
+      "failure_type": "wrong_boundary",
+      "expect": {"tool_calls": [{"name": "send", "args": {"confirmed": true}}]},
+      "metadata": {"skill": "multiturn_confirm_then_send", "difficulty": "hard", "what_it_tests": "Lượt 1 xin gửi (chưa xác nhận) → lượt 2 user xác nhận rõ → lượt cuối gọi send(confirmed=true), không hỏi lại lần nữa. Chiều dương của boundary gửi, base M-case chưa đo."}
+    },
+    {
+      "id": "GM02_search_type_correction",
+      "phase": "B", "suite": "group",
+      "turns": [
+        {"role": "user", "content": "Cho mình các tweet phổ biến nhất về Llama 3"},
+        {"role": "user", "content": "Vẫn chủ đề Llama 3 nhé, nhưng lấy tweet mới nhất thay vì phổ biến"}
+      ],
+      "failure_type": "wrong_arg_value",
+      "expect": {"tool_calls": [{"name": "social_search", "args": {"query": "Llama 3", "search_type": "Latest"}}]},
+      "metadata": {"skill": "multiturn_search_type_correction", "difficulty": "hard", "what_it_tests": "Sửa search_type Top→Latest theo lượt 2, giữ nguyên query 'Llama 3'. Base M-case mới sửa handle/limit, chưa sửa search_type."}
+    },
+    {
+      "id": "GM03_carry_topic_switch_to_tweets",
+      "phase": "B", "suite": "group",
+      "turns": [
+        {"role": "user", "content": "Tin tức AI hôm nay có gì mới?"},
+        {"role": "user", "content": "Giờ cho mình xem mọi người tweet gì về cùng chủ đề đó"}
+      ],
+      "failure_type": "wrong_tool",
+      "expect": {"tool_calls": [{"name": "social_search", "args": {"query": "AI"}}]},
+      "metadata": {"skill": "multiturn_carry_topic_switch_tool", "difficulty": "hard", "what_it_tests": "Carry chủ đề 'AI' từ lượt 1 sang lượt 2 ĐỒNG THỜI đổi nguồn web → social_search. M02 carry timeframe cùng tool, M06 đổi tool nhưng chỉ định rõ; case này model phải tự suy ra cả hai."}
+    },
+    {
+      "id": "GM04_switch_lookup_to_fetch",
+      "phase": "B", "suite": "group",
+      "turns": [
+        {"role": "user", "content": "Tìm tin về Claude trên web giùm mình"},
+        {"role": "user", "content": "Thôi khỏi tìm, đọc trực tiếp bài này: https://www.anthropic.com/news/claude"}
+      ],
+      "failure_type": "wrong_tool",
+      "expect": {"tool_calls": [{"name": "fetch", "args": {"url": "https://www.anthropic.com/news/claude"}}]},
+      "metadata": {"skill": "multiturn_switch_to_url", "difficulty": "medium", "what_it_tests": "Lượt 2 huỷ tìm kiếm, trỏ thẳng vào URL → chỉ gọi fetch đúng URL đó, không gọi lookup."}
+    },
+    {
+      "id": "GM05_route_to_summarize_text_new_tool",
+      "phase": "B", "suite": "group",
+      "turns": [
+        {"role": "user", "content": "Tìm tin AI hôm nay trên web giúp mình"},
+        {"role": "user", "content": "OK giờ tóm tắt giúp mình đoạn phản hồi khách hàng này thành 2 câu thôi: 'Hôm qua tôi đặt một đơn hàng qua app nhưng giao chậm tận ba ngày. Hộp bị móp một góc làm món quà tặng bạn bè mất đẹp. Tuy nhiên nhân viên hỗ trợ rất nhiệt tình và nhanh chóng hoàn lại phần phí vận chuyển cho tôi.'"}
+      ],
+      "failure_type": "wrong_tool",
+      "expect": {"tool_calls": [{"name": "summarize_text", "args": {"max_sentences": 2}}]},
+      "metadata": {"skill": "routing_new_tool_summarize", "difficulty": "medium", "what_it_tests": "Case route tới TOOL MỚI của nhóm (summarize_text, CP3): có sẵn đoạn văn trong hội thoại + yêu cầu tóm tắt N câu → gọi summarize_text(max_sentences=2), không dùng lookup hay format."}
+    }
+  ]
 }

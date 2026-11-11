@@ -5,6 +5,7 @@
 - Họ tên: Lê Quốc Khánh
 - MSSV: 2A202603742
 - Email: 26ai.khanhlq2@vinuni.edu.vn
+- Vai trò trong nhóm: Phát triển 4 tool mới local + viết tool contract (TOOL.md) + viết 13 unit test (CP3) ≥ 4 tool mới
 
 ## 2. Phần việc phụ trách
 
