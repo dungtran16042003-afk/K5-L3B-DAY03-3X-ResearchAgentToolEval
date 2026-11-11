@@ -5,17 +5,17 @@
 - Họ tên: Lê Quốc Khánh
 - MSSV: 2A202603742
 - Email: 26ai.khanhlq2@vinuni.edu.vn
-- Vai trò trong nhóm: Phát triển 4 tool mới local + viết tool contract (TOOL.md) + viết 13 unit test (CP3) ≥ 4 tool mới
+- Vai trò trong nhóm: Phát triển 4 tool mới local + viết tool contract (TOOL.md)
 
 ## 2. Phần việc phụ trách
 
-- **CP3 — Tool mới và unit test**: viết 4 tool mới cho agent (đủ điều kiện bonus "Hơn 3 tool mới ≥ 4"), kèm unit test cho từng tool.
+- **CP3 — Tool mới và unit test**: viết 4 tool mới cho agent, kèm unit test cho từng tool.
 - Dọn lại bản nháp sai cấu trúc do AI khác (Copilot) tạo trước đó: file tool nằm sai vị trí (`tools/feedback_analyzer.py` thay vì `tools/feedback_analyzer/tool.py`), TOOL.md sai định dạng frontmatter, test nằm sai thư mục (`tests/starter_v0/tests/`).
 - Phát hiện và xử lý **API key OpenAI thật bị dán vào `starter_v0/.env.example`** (file có trong repo) — đã revert file; key cần được thu hồi trên trang OpenAI.
 
 ## 3. Đóng góp cụ thể
 
-- Viết 4 tool local (không gọi mạng, không cần API key), mỗi tool gồm `tool.py` + `TOOL.md` đúng contract trong `tools/README.md`:
+- Viết 4 tool local, mỗi tool gồm `tool.py` + `TOOL.md` đúng contract trong `tools/README.md`:
   - `feedback_analyzer`: phân tích cảm xúc phản hồi tiếng Việt (positive/negative/neutral + điểm khen/chê), hiểu cả gõ có dấu và không dấu.
   - `summarize_text`: tóm tắt extractive — chọn các câu điểm cao nhất theo tần suất từ, giữ nguyên văn và thứ tự.
   - `keyword_extractor`: trích `top_k` từ khóa hay gặp kèm số lần xuất hiện (bỏ stopword/số, Việt + Anh).
@@ -23,7 +23,7 @@
 - Đăng ký đủ 4 tool trong `tools/__init__.py` (`TOOL_FUNCTIONS`) và `artifacts/tools.yaml` (description ghi rõ *khi nào dùng / khi nào không dùng* theo chuẩn CP2).
 - Áp dụng nguyên tắc lab: tool **trả error dict thay vì raise** khi model gửi input xấu (chuỗi rỗng, sai kiểu, số < 1) để agent đọc lỗi và hỏi lại user thay vì crash.
 - Viết **13 unit test** (4 + 3 + 3 + 3) trong `tests/test_tools_todo.py`, mỗi tool có đủ: happy path, input xấu từ model, nhánh lỗi.
-- Điền bảng **B5a** và dòng bonus "Hơn 3 tool mới (≥ 4)" trong `report/team/group_report.md`.
+- Điền bảng **B5a** và dòng bonus "Hơn 3 tool mới" trong `report/team/group_report.md`.
 
 ## 4. Bằng chứng
 
@@ -41,6 +41,6 @@
 
 ## 5. Tự đánh giá
 
-- Đã đạt yêu cầu CP3 (≥ 1 tool + ≥ 3 test) và vượt mức tối thiểu (4 tool, đủ điều kiện dòng bonus "≥ 4 tool mới" — còn phụ thuộc có eval case route tới tool mới trong CP4).
+- Đã đạt yêu cầu CP3 — còn phụ thuộc có eval case route tới tool mới trong CP4).
 - Hiểu được sự khác nhau giữa **unit test** (đo code của tool: nhận args đó có chạy đúng không) và **eval** (đo lựa chọn của model: chọn tool/args có đúng không) — ví dụ model gọi `feedback_analyzer(feedback="tốt")` đúng args nhưng nếu code raise khi gặp input sai kiểu thì eval vẫn PASS mà agent vẫn crash; unit test là thứ bắt được lỗi đó.
 - Điểm cần cải thiện: 4 tool đều thuần local (không gọi API ngoài) để chắc chắn chạy offline; chưa viết eval case route tới tool mới (thuộc CP4).
